@@ -73,41 +73,44 @@ const EventList: React.FC = () => {
   return (
     <div>
       {/* Filters and Sorting */}
-      <div className="filters mb-4 flex xs:flex-col gap-5">
-      <h2 className="text-2xl font-bold text-gray-950">Event List</h2>
-        <FormControl className="mr-4" size="medium">
-          <TextField
-            label="Filter by Location"
-            value={locationFilter}
-            onChange={(e) => setLocationFilter(e.target.value)}
-          />
-        </FormControl>
-        <FormControl className="mr-4 sm:w-[20%]" size="medium">
-          <InputLabel>Status</InputLabel>
-          <Select
-            label="Status"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as EventStatus | '')}
-          >
-            <MenuItem value="">All</MenuItem>
-            <MenuItem value="UPCOMING">Upcoming</MenuItem>
-            <MenuItem value="ONGOING">Ongoing</MenuItem>
-            <MenuItem value="COMPLETED">Completed</MenuItem>
-            <MenuItem value="CANCELLED">Cancelled</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl className="mr-4 sm:w-[20%]" size="medium">
-          <InputLabel>Sort By</InputLabel>
-          <Select
-            label="Sort By"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'title' | 'date' | '')}
-          >
-            <MenuItem value="">None</MenuItem>
-            <MenuItem value="title">Title</MenuItem>
-            <MenuItem value="date">Date</MenuItem>
-          </Select>
-        </FormControl>
+      <div className="filters mb-4 flex flex-col gap-5">
+        <h2 className="text-2xl font-bold text-gray-950">Event List</h2>
+        <div className='sm:w-[100%] flex xs:flex-col gap-5'>
+          <FormControl className="mr-4" size="medium">
+            <TextField
+              label="Filter by Location"
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+            />
+          </FormControl>
+          <FormControl className="mr-4 sm:w-[20%]" size="medium">
+            <InputLabel>Status</InputLabel>
+            <Select
+              label="Status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as EventStatus | '')}
+            >
+              <MenuItem value="">All</MenuItem>
+              <MenuItem value="UPCOMING">Upcoming</MenuItem>
+              <MenuItem value="ONGOING">Ongoing</MenuItem>
+              <MenuItem value="COMPLETED">Completed</MenuItem>
+              <MenuItem value="CANCELLED">Cancelled</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl className="mr-4 sm:w-[20%]" size="medium">
+            <InputLabel>Sort By</InputLabel>
+            <Select
+              label="Sort By"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'title' | 'date' | '')}
+            >
+              <MenuItem value="">None</MenuItem>
+              <MenuItem value="title">Title</MenuItem>
+              <MenuItem value="date">Date</MenuItem>
+            </Select>
+          </FormControl>
+        </div>
+
       </div>
       <div className="p-6 overflow-x-auto max-w-full" style={{ width: '90vw' }}>
         {/* Event Table */}
