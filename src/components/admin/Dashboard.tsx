@@ -52,6 +52,10 @@ const Dashboard: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { roles } = useSelector((state: RootState) => state.roles);
   const { users } = useSelector((state: RootState) => state.users);
+  const currentRole = user?.role
+  ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()
+  : null;
+  const pageHeading = `${currentRole}'s Dashboard`; 
   // console.log(user);
   console.log("Users: ",users);
   console.log("Roles: ",roles);
@@ -69,7 +73,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="p-6 flex flex-col justify-center gap-5" style={{ width: '90vw' }}>
-      <TopBar heading='Admin Dashboard' />
+      <TopBar heading={pageHeading} />
       {(user?.otherPermissions?.some(permission =>
         ["manage_users", "manage_roles"].includes(permission)
       ) || user?.role === 'ADMIN')
