@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -40,6 +40,12 @@ interface UserFormData {
   otherPermissions?: string[];
 }
 
+interface ValidationErrors {
+  username?: string;
+  email?: string;
+  password?: string;
+}
+
 interface SortConfig {
   key: 'username' | 'email' | null;
   direction: 'asc' | 'desc';
@@ -51,17 +57,15 @@ interface RemainingPermisions {
 }
 
 const UserManagement: React.FC = () => {
-
-  // const users;
   const { roles } = useSelector((state: RootState) => state.roles);
   const users = useSelector((state: RootState) => state.users.users);
-
   const dispatch = useDispatch();
+
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  // const [status, setStatus] = useState<string>('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: null,
     direction: 'asc'
@@ -77,8 +81,6 @@ const UserManagement: React.FC = () => {
     otherPermissions: []
   });
 
-
-
   const allPermissions = [
     { key: 'manage_users', label: 'Manage Users' },
     { key: 'manage_roles', label: 'Manage Roles' },
@@ -87,9 +89,62 @@ const UserManagement: React.FC = () => {
     { key: 'register_events', label: 'Register Events' },
   ];
 
-
   const [remainingPermissions, setRemainingPermissions] = useState<RemainingPermisions[]>([]);
 
+  // Email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // Username validation regex (alphanumeric with underscores, 3-20 characters)
+  const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+
+  const validateForm = (): boolean => {
+    const errors: ValidationErrors = {};
+    let isValid = true;
+
+    // Username validations
+    if (!formData.username.trim()) {
+      errors.username = "Username is required";
+      isValid = false;
+    } else if (!usernameRegex.test(formData.username)) {
+      errors.username = "Username must be 3-20 characters and contain only letters, numbers, and underscores";
+      isValid = false;
+    } else if (!editingUser && users.some(user => user.username.toLowerCase() === formData.username.toLowerCase())) {
+      errors.username = "Username already exists";
+      isValid = false;
+    }
+
+    // Email validations
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+      isValid = false;
+    } else if (!emailRegex.test(formData.email)) {
+      errors.email = "Invalid email format. Example: john@example.com";
+      isValid = false;
+    } else {
+      const emailExists = users.some(user =>
+        user.email.toLowerCase() === formData.email.toLowerCase() &&
+        (!editingUser || user.id !== editingUser.id)
+      );
+      if (emailExists) {
+        errors.email = "Email already exists";
+        isValid = false;
+      }
+    }
+
+    // Password validation (only for new users)
+    if (!editingUser) {
+      if (!formData.password) {
+        errors.password = "Password is required";
+        isValid = false;
+      } else if (formData.password.length < 6) {
+        errors.password = "Password must be at least 6 characters";
+        isValid = false;
+      }
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
 
   const filteredAndSortedUsers = useMemo(() => {
     if (!users) return [];
@@ -130,8 +185,8 @@ const UserManagement: React.FC = () => {
   };
 
   const handleOpen = (user?: User) => {
+    setValidationErrors({}); // Clear previous validation errors
     if (user) {
-      console.log('Editing user:', user);
       setEditingUser(user);
       setFormData({
         username: user.username,
@@ -141,7 +196,6 @@ const UserManagement: React.FC = () => {
         status: user.status,
         otherPermissions: user.otherPermissions ?? [],
       });
-      // setStatus(user.status);
     } else {
       setEditingUser(null);
       setFormData({
@@ -152,7 +206,6 @@ const UserManagement: React.FC = () => {
         status: 'ACTIVE',
         otherPermissions: [],
       });
-      // setStatus('ACTIVE');``
     }
     setOpen(true);
   };
@@ -160,36 +213,20 @@ const UserManagement: React.FC = () => {
   const handleClose = () => {
     setOpen(false);
     setEditingUser(null);
+    setValidationErrors({});
   };
 
   const handleSubmit = () => {
-    try {
-      if (!formData.username.trim()) {
-        alert("Username cannot be empty.");
-        return;
-      }
-      if (!formData.email.trim()) {
-        alert("Email cannot be empty.");
-        return;
-      }
-      if (!formData.password.trim()) {
-        alert("Password cannot be empty.");
-        return;
-      }
-      if (!formData.role) {
-        alert("Select a Role to proceed.");
-        return;
-      }
-      if (!formData.status) {
-        alert("Select a status to proceed.");
-        return;
-      }
+    if (!validateForm()) {
+      return;
+    }
 
+    try {
       const newUser: User = {
-        ...(editingUser || {}), // Preserve existing user data
+        ...(editingUser || {}),
         id: editingUser ? editingUser.id : Date.now(),
         username: formData.username,
-        password: editingUser ? editingUser.password : formData.password, // Preserve existing password when editing
+        password: editingUser ? editingUser.password : formData.password,
         email: formData.email,
         role: formData.role,
         status: formData.status as UserStatus,
@@ -197,21 +234,17 @@ const UserManagement: React.FC = () => {
         otherPermissions: formData.otherPermissions
       };
 
-      console.log('About to dispatch user update:', newUser);
       if (editingUser) {
         dispatch(updateUser(newUser));
-      }
-      else {
+      } else {
         dispatch(addUser(newUser));
       }
-      console.log('Save user:', formData);
-      handleClose();
 
+      handleClose();
     } catch (error) {
       console.error('Error updating user:', error);
       alert('There was an error updating the user. Please try again.');
     }
-
   };
 
   const handleToggleStatus = (userId: number) => {
@@ -220,7 +253,6 @@ const UserManagement: React.FC = () => {
 
   const handleDelete = (user: User) => {
     dispatch(deleteUser(user));
-    console.log('Delete user:', user);
   };
 
   const handleFilterChange = (type: string, value: string) => {
@@ -232,24 +264,17 @@ const UserManagement: React.FC = () => {
   };
 
   const generateRemainingPermissions = (user: User) => {
-    // Step 1: Fetch the user's role
     const roleOfUser = user.role;
-
-    // Step 2: Find the role object for the user's role
     const role = roles.find(r => r.name === roleOfUser);
-
-    // Step 3: Combine the role's permissions and user's otherPermissions
     const assignedPermissions = [
-      ...(role?.permissions || []), // Role permissions
-      ...(user.otherPermissions || []) // Other individual permissions
+      ...(role?.permissions || []),
+      ...(user.otherPermissions || [])
     ];
 
-    // Step 4: Calculate remaining permissions by filtering out assigned ones
     const remainingPermissions = allPermissions.filter(
       permission => !assignedPermissions.includes(permission.key)
     );
 
-    // Step 5: Handle the user and return the remaining permissions
     handleOpen(user);
     setRemainingPermissions(remainingPermissions);
     return remainingPermissions;
@@ -315,10 +340,6 @@ const UserManagement: React.FC = () => {
     </Card>
   );
 
-  useEffect(() => {
-    console.log('Users state updated:', users);
-  }, [users]);
-
   return (
     <div className="p-6">
       <div className="flex justify-between mb-6">
@@ -362,7 +383,6 @@ const UserManagement: React.FC = () => {
                       : 'Sort by username'
                   }
                 >
-
                   Username
                 </Button>
               </TableCell>
@@ -381,7 +401,6 @@ const UserManagement: React.FC = () => {
               </TableCell>
               <TableCell>Role</TableCell>
               <TableCell>Status</TableCell>
-              {/* <TableCell>Addtional Permissions</TableCell> */}
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -399,19 +418,6 @@ const UserManagement: React.FC = () => {
                     aria-label={`User status ${user.status}`}
                   />
                 </TableCell>
-
-                {/* <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {generateRemainingPermissions(user)?.map((permission) => (
-                      <Chip
-                        key={permission.key} // Use a unique key if permission is an object
-                        label={permission.label} // Adjust label based on data structure
-                        size="small"
-                        className="mr-1 mb-1"
-                      />
-                    ))}
-                  </div>
-                </TableCell> */}
                 <TableCell>
                   <IconButton
                     onClick={() => generateRemainingPermissions(user)}
@@ -446,8 +452,7 @@ const UserManagement: React.FC = () => {
           {editingUser ? 'Edit User' : 'Add New User'}
         </DialogTitle>
         <DialogContent>
-          {/* FOR SAFETY MEASURES AND SIMPLE USAGE, USERNAME CANNOT BE EDITED */}
-          {!editingUser &&
+          {!editingUser && (
             <TextField
               label="Username"
               value={formData.username}
@@ -455,8 +460,11 @@ const UserManagement: React.FC = () => {
               fullWidth
               margin="normal"
               required
+              error={!!validationErrors.username}
+              helperText={validationErrors.username}
             />
-          }
+          )}
+
           <TextField
             label="Email"
             value={formData.email}
@@ -464,18 +472,24 @@ const UserManagement: React.FC = () => {
             fullWidth
             margin="normal"
             required
+            error={!!validationErrors.email}
+            helperText={validationErrors.email}
           />
-          {/* FOR SAFETY MEASURES AND SIMPLE USAGE, PASSWORD CANNOT BE EDITED */}
+
           {!editingUser && (
             <TextField
               label="Password"
               type="password"
+              value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               fullWidth
               margin="normal"
               required
+              error={!!validationErrors.password}
+              helperText={validationErrors.password}
             />
           )}
+
           <TextField
             select
             label="Role"
@@ -491,29 +505,31 @@ const UserManagement: React.FC = () => {
               </MenuItem>
             ))}
           </TextField>
-          <RadioGroup
-            row
-            value={formData.status}
-            onChange={(e) => {
-              // setStatus(e.target.value);
-              setFormData({ ...formData, status: e.target.value });
-            }}
-            name="status-radio-group"
-            aria-label="user status"
-          >
-            <FormControlLabel
-              value="ACTIVE"
-              control={<Radio />}
-              label="Active"
-            />
-            <FormControlLabel
-              value="INACTIVE"
-              control={<Radio />}
-              label="Inactive"
-            />
-          </RadioGroup>
-          {editingUser
-            &&
+
+          <FormControl component="fieldset" className="mt-4">
+            <RadioGroup
+              row
+              value={formData.status}
+              onChange={(e) => {
+                setFormData({ ...formData, status: e.target.value });
+              }}
+              name="status-radio-group"
+              aria-label="user status"
+            >
+              <FormControlLabel
+                value="ACTIVE"
+                control={<Radio />}
+                label="Active"
+              />
+              <FormControlLabel
+                value="INACTIVE"
+                control={<Radio />}
+                label="Inactive"
+              />
+            </RadioGroup>
+          </FormControl>
+
+          {editingUser && (
             <div className="mt-4">
               <h3 className="text-lg font-medium mb-2">Additional Permissions</h3>
               <FormGroup>
@@ -530,19 +546,20 @@ const UserManagement: React.FC = () => {
                           setFormData({ ...formData, otherPermissions: newPermissions });
                         }}
                       />
-
                     }
                     label={permission.label}
                   />
                 ))}
               </FormGroup>
             </div>
-          }
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {editingUser ? 'Save' : 'Create'}
+          <Button onClick={handleClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">
+            {editingUser ? 'Save Changes' : 'Create User'}
           </Button>
         </DialogActions>
       </Dialog>
