@@ -47,6 +47,16 @@ const initialState: UserState = {
       createdAt: "2024-01-01",
       otherPermissions: [],
     },
+    {
+      id: 5,
+      username: "nalan",
+      password: "nalan",
+      email: "nalan@example.com",
+      role: "ORGANIZER",
+      status: "ACTIVE",
+      createdAt: "2024-01-01",
+      otherPermissions: [],
+    },
   ],
 };
 
