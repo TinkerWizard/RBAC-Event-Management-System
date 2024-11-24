@@ -1,5 +1,5 @@
 // src/components/events/EventManagement.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
@@ -30,11 +30,11 @@ import {
   Trash2,
   Users,
 } from 'lucide-react';
-import { useSelector } from 'react-redux';
-import { events } from '../../data/mockData';
+import { useDispatch, useSelector } from 'react-redux';
 import { Event, EventStatus } from '../../types';
 import { RootState } from '../../store/store';
 import * as XLSX from 'xlsx';
+import { addEvent, updateEvent, deleteEvent } from '../../store/eventSlice';
 
 interface EventFormData {
   id: number;
@@ -52,6 +52,8 @@ interface EventFormData {
 
 const EventManagement: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
+  const { events } = useSelector((state: RootState) => state.events);
+  const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [formData, setFormData] = useState<EventFormData>({
@@ -124,13 +126,56 @@ const EventManagement: React.FC = () => {
 
   const handleSubmit = () => {
     // In a real app, this would be an API call
+    if(!formData.title.trim())
+    {
+      alert("Event title cannot be empty.");
+      return;
+    }
+    if(!formData.location.trim())
+    {
+      alert("Event location cannot be empty.");
+      return;
+    }
+    if(!formData.description.trim())
+    {
+      alert("Event description cannot be empty.");
+      return;
+    }
+    if(!formData.capacity)
+    {
+      alert("Event capacity cannot be empty.");
+      return;
+    }
+    const newEvent: Event = {
+      id: editingEvent ? editingEvent.id : Date.now(),
+      title: formData.title, // Assuming formData has the 'title' field
+      date: formData.date, // Assuming formData has the 'date' field (in string format)
+      location: formData.location, // Assuming formData has the 'location' field
+      description: formData.description, // Assuming formData has the 'description' field
+      organizerId: formData.organizerId, // Assuming formData has the 'organizerId' field
+      status: formData.status, // Assuming formData has the 'status' field (should match EventStatus type)
+      capacity: formData.capacity, // Assuming formData has the 'capacity' field (optional)
+      registrations: formData.registrations, // Assuming formData has the 'registrations' field (optional)
+      createdAt: new Date().toISOString(), // Current timestamp
+      updatedAt: new Date().toISOString() // Current timestamp
+    };
+    
+    if(editingEvent)
+    {
+      dispatch(updateEvent(newEvent));
+    }
+    else
+    {
+      dispatch(addEvent(newEvent));
+    }
     console.log('Save event:', formData);
     handleClose();
   };
 
-  const handleDelete = (eventId: number) => {
+  const handleDelete = (event: Event) => {
     // In a real app, this would be an API call
-    console.log('Delete event:', eventId);
+    dispatch(deleteEvent(event));
+    console.log('Deleted event:', event);
   };
 
   const handleExport = (event?: Event) => {
@@ -154,6 +199,9 @@ const EventManagement: React.FC = () => {
     XLSX.writeFile(wb, `events_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
+  useEffect(() => {
+    console.log('Events state updated:', events);
+  }, [events]);
   const getStatusColor = (status: EventStatus) => {
     switch (status) {
       case 'UPCOMING':
@@ -236,7 +284,7 @@ const EventManagement: React.FC = () => {
                         <Edit className="w-4 h-4" />
                       </IconButton>
                       <IconButton
-                        onClick={() => handleDelete(event.id)}
+                        onClick={() => handleDelete(event)}
                         size="small"
                         color="error"
                       >
@@ -306,11 +354,12 @@ const EventManagement: React.FC = () => {
               fullWidth
               margin="normal"
             >
-              {['UPCOMING', 'ONGOING', 'COMPLETED', 'CANCELLED'].map((status) => (
-                <MenuItem key={status} value={status}>
-                  {status}
+                <MenuItem key='UPCOMING' value='UPCOMING'>
+                  UPCOMING
                 </MenuItem>
-              ))}
+                <MenuItem key='ONGOING' value='ONGOING'>
+                  ONGOING
+                </MenuItem>
             </TextField>
             <TextField
               label="Capacity"
@@ -329,6 +378,7 @@ const EventManagement: React.FC = () => {
               label="Registrations"
               type="number"
               value={formData.registrations}
+              disabled
               onChange={(e) =>
                 setFormData({
                   ...formData,
