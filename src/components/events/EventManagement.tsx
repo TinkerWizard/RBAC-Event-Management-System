@@ -1,4 +1,3 @@
-// src/components/events/EventManagement.tsx
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -50,25 +49,38 @@ interface EventFormData {
   updatedAt: string;
 }
 
+interface ValidationErrors {
+  title: string;
+  location: string;
+  description: string;
+  capacity: string;
+}
+
 const EventManagement: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { events } = useSelector((state: RootState) => state.events);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
+    title: '',
+    location: '',
+    description: '',
+    capacity: '',
+  });
+
   const [formData, setFormData] = useState<EventFormData>({
     id: events.length > 0 ? events[events.length - 1].id + 1 : 1,
     title: '',
     date: '',
     location: '',
     description: '',
-    organizerId: user?.id ?? 0,//organizer is the logged in user. and only organizer can create and edit events
+    organizerId: user?.id ?? 0,
     status: 'UPCOMING',
     capacity: 0,
     registrations: 0,
     createdAt: '',
     updatedAt: ''
-
   });
 
   const { data: eventList, isLoading, error } = useQuery({
@@ -81,13 +93,59 @@ const EventManagement: React.FC = () => {
     },
   });
 
+  const validateForm = (): boolean => {
+    const errors: ValidationErrors = {
+      title: '',
+      location: '',
+      description: '',
+      capacity: '',
+    };
+    
+    let isValid = true;
+
+    // Title validation
+    if (!formData.title.trim()) {
+      errors.title = 'Event title is required';
+      isValid = false;
+    } else {
+      const isTitleDuplicate = events.some(
+        event => event.title.toLowerCase() === formData.title.toLowerCase() && 
+        (!editingEvent || event.id !== editingEvent.id)
+      );
+      if (isTitleDuplicate) {
+        errors.title = 'Event title must be unique';
+        isValid = false;
+      }
+    }
+
+    // Location validation
+    if (!formData.location.trim()) {
+      errors.location = 'Location is required';
+      isValid = false;
+    }
+
+    // Description validation
+    if (!formData.description.trim()) {
+      errors.description = 'Description is required';
+      isValid = false;
+    }
+
+    // Capacity validation
+    if (!formData.capacity || formData.capacity <= 100) {
+      errors.capacity = 'Capacity must be greater than 100';
+      isValid = false;
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
   const handleOpen = (event?: Event) => {
     if (event) {
       setEditingEvent(event);
       setFormData({
         id: event.id,
         title: event.title,
-        // Convert the string date to a Date object
         date: new Date(event.date).toISOString(),
         location: event.location,
         description: event.description,
@@ -103,7 +161,6 @@ const EventManagement: React.FC = () => {
       setFormData({
         id: events.length > 0 ? events[events.length - 1].id + 1 : 1,
         title: '',
-        // Set current date as default for new events
         date: new Date().toISOString(),
         location: '',
         description: '',
@@ -115,67 +172,55 @@ const EventManagement: React.FC = () => {
         updatedAt: ''
       });
     }
+    setValidationErrors({
+      title: '',
+      location: '',
+      description: '',
+      capacity: '',
+    });
     setOpen(true);
-    // alert(open);
   };
 
   const handleClose = () => {
     setOpen(false);
     setEditingEvent(null);
+    setValidationErrors({
+      title: '',
+      location: '',
+      description: '',
+      capacity: '',
+    });
   };
 
   const handleSubmit = () => {
-    // In a real app, this would be an API call
-    if(!formData.title.trim())
-    {
-      alert("Event title cannot be empty.");
+    if (!validateForm()) {
       return;
     }
-    if(!formData.location.trim())
-    {
-      alert("Event location cannot be empty.");
-      return;
-    }
-    if(!formData.description.trim())
-    {
-      alert("Event description cannot be empty.");
-      return;
-    }
-    if(!formData.capacity)
-    {
-      alert("Event capacity cannot be empty.");
-      return;
-    }
+
     const newEvent: Event = {
       id: editingEvent ? editingEvent.id : Date.now(),
-      title: formData.title, // Assuming formData has the 'title' field
-      date: formData.date, // Assuming formData has the 'date' field (in string format)
-      location: formData.location, // Assuming formData has the 'location' field
-      description: formData.description, // Assuming formData has the 'description' field
-      organizerId: formData.organizerId, // Assuming formData has the 'organizerId' field
-      status: formData.status, // Assuming formData has the 'status' field (should match EventStatus type)
-      capacity: formData.capacity, // Assuming formData has the 'capacity' field (optional)
-      registrations: formData.registrations, // Assuming formData has the 'registrations' field (optional)
-      createdAt: new Date().toISOString(), // Current timestamp
-      updatedAt: new Date().toISOString() // Current timestamp
+      title: formData.title,
+      date: formData.date,
+      location: formData.location,
+      description: formData.description,
+      organizerId: formData.organizerId,
+      status: formData.status,
+      capacity: formData.capacity,
+      registrations: formData.registrations,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
-    
-    if(editingEvent)
-    {
+
+    if (editingEvent) {
       dispatch(updateEvent(newEvent));
-    }
-    else
-    {
+    } else {
       dispatch(addEvent(newEvent));
     }
-    console.log('Save event:', formData);
     handleClose();
   };
 
   const handleDelete = (event: Event) => {
-    // In a real app, this would be an API call
     dispatch(deleteEvent(event));
-    console.log('Deleted event:', event);
   };
 
   const handleExport = (event?: Event) => {
@@ -195,13 +240,13 @@ const EventManagement: React.FC = () => {
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Events');
-
     XLSX.writeFile(wb, `events_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   useEffect(() => {
     console.log('Events state updated:', events);
   }, [events]);
+
   const getStatusColor = (status: EventStatus) => {
     switch (status) {
       case 'UPCOMING':
@@ -219,7 +264,8 @@ const EventManagement: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <div className="p-6 flex flex-col">
+      <div className="p-6 flex flex-col gap-5" style={{width: '90vw'}}>
+        <h2 className="text-2xl font-bold text-gray-950">Event Management</h2>
         <div className="flex justify-between mb-6">
           <div className="space-x-2">
             <Button
@@ -311,6 +357,8 @@ const EventManagement: React.FC = () => {
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               fullWidth
               margin="normal"
+              error={!!validationErrors.title}
+              helperText={validationErrors.title}
             />
             <DatePicker
               label="Event Date"
@@ -332,6 +380,8 @@ const EventManagement: React.FC = () => {
               }
               fullWidth
               margin="normal"
+              error={!!validationErrors.location}
+              helperText={validationErrors.location}
             />
             <TextField
               label="Description"
@@ -343,8 +393,10 @@ const EventManagement: React.FC = () => {
               margin="normal"
               multiline
               rows={3}
+              error={!!validationErrors.description}
+              helperText={validationErrors.description}
             />
-                        <TextField
+            <TextField
               label="Status"
               value={formData.status}
               onChange={(e) =>
@@ -354,12 +406,12 @@ const EventManagement: React.FC = () => {
               fullWidth
               margin="normal"
             >
-                <MenuItem key='UPCOMING' value='UPCOMING'>
-                  UPCOMING
-                </MenuItem>
-                <MenuItem key='ONGOING' value='ONGOING'>
-                  ONGOING
-                </MenuItem>
+              <MenuItem key='UPCOMING' value='UPCOMING'>
+                UPCOMING
+              </MenuItem>
+              <MenuItem key='ONGOING' value='ONGOING'>
+                ONGOING
+              </MenuItem>
             </TextField>
             <TextField
               label="Capacity"
@@ -373,6 +425,8 @@ const EventManagement: React.FC = () => {
               }
               fullWidth
               margin="normal"
+              error={!!validationErrors.capacity}
+              helperText={validationErrors.capacity}
             />
             <TextField
               label="Registrations"
@@ -388,7 +442,6 @@ const EventManagement: React.FC = () => {
               fullWidth
               margin="normal"
             />
-
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
