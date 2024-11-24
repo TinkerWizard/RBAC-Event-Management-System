@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ import {
   CardContent,
 } from '@mui/material';
 import { Edit, Trash2, UserPlus, ArrowUp, ArrowDown, Filter } from 'lucide-react';
-import { Role, User, UserRole, UserStatus } from '../../types';
+import { User, UserRole, UserStatus } from '../../types';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { addUser, deleteUser, updateUser } from '../../store/userSlice';
@@ -45,17 +45,21 @@ interface SortConfig {
   direction: 'asc' | 'desc';
 }
 
+interface RemainingPermisions {
+  key: string;
+  label: string;
+}
+
 const UserManagement: React.FC = () => {
 
   // const users;
   const { roles } = useSelector((state: RootState) => state.roles);
-  const { users } = useSelector((state: RootState) => state.users);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const users = useSelector((state: RootState) => state.users.users);
 
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [status, setStatus] = useState<string>('');
+  // const [status, setStatus] = useState<string>('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -84,14 +88,9 @@ const UserManagement: React.FC = () => {
     { key: 'unregister_events', label: 'Unregister Events' },
   ];
 
-  const availablePermissionsForThisUser = (roles: Role[]) => {
-    const userPermissions = roles.flatMap(role => role.permissions);
-    return allPermissions.filter(permission => !userPermissions.includes(permission.key));
-  };
 
-  const remainingPermissions = availablePermissionsForThisUser(
-    roles.filter(role => role.name === user?.role)
-  );
+  const [remainingPermissions, setRemainingPermissions] = useState<RemainingPermisions[]>([]);
+
 
   const filteredAndSortedUsers = useMemo(() => {
     if (!users) return [];
@@ -133,6 +132,7 @@ const UserManagement: React.FC = () => {
 
   const handleOpen = (user?: User) => {
     if (user) {
+      console.log('Editing user:', user);
       setEditingUser(user);
       setFormData({
         username: user.username,
@@ -142,7 +142,7 @@ const UserManagement: React.FC = () => {
         status: user.status,
         otherPermissions: user.otherPermissions ?? [],
       });
-      setStatus(user.status);
+      // setStatus(user.status);
     } else {
       setEditingUser(null);
       setFormData({
@@ -153,7 +153,7 @@ const UserManagement: React.FC = () => {
         status: 'ACTIVE',
         otherPermissions: [],
       });
-      setStatus('ACTIVE');
+      // setStatus('ACTIVE');``
     }
     setOpen(true);
   };
@@ -164,47 +164,55 @@ const UserManagement: React.FC = () => {
   };
 
   const handleSubmit = () => {
+    try {
+      if (!formData.username.trim()) {
+        alert("Username cannot be empty.");
+        return;
+      }
+      if (!formData.email.trim()) {
+        alert("Email cannot be empty.");
+        return;
+      }
+      if (!formData.password.trim()) {
+        alert("Password cannot be empty.");
+        return;
+      }
+      if (!formData.role) {
+        alert("Select a Role to proceed.");
+        return;
+      }
+      if (!formData.status) {
+        alert("Select a status to proceed.");
+        return;
+      }
 
-    if (!formData.username.trim()) {
-      alert("Username cannot be empty.");
-      return;
-    }
-    if (!formData.email.trim()) {
-      alert("Email cannot be empty.");
-      return;
-    }
-    if (!formData.password.trim()) {
-      alert("Password cannot be empty.");
-      return;
-    }
-    if (!formData.role) {
-      alert("Select a Role to proceed.");
-      return;
-    }
-    if (!formData.status) {
-      alert("Select a status to proceed.");
-      return;
+      const newUser: User = {
+        ...(editingUser || {}), // Preserve existing user data
+        id: editingUser ? editingUser.id : Date.now(),
+        username: formData.username,
+        password: editingUser ? editingUser.password : formData.password, // Preserve existing password when editing
+        email: formData.email,
+        role: formData.role,
+        status: formData.status as UserStatus,
+        createdAt: editingUser ? editingUser.createdAt : new Date().toISOString(),
+        otherPermissions: formData.otherPermissions
+      };
+
+      console.log('About to dispatch user update:', newUser);
+      if (editingUser) {
+        dispatch(updateUser(newUser));
+      }
+      else {
+        dispatch(addUser(newUser));
+      }
+      console.log('Save user:', formData);
+      handleClose();
+
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('There was an error updating the user. Please try again.');
     }
 
-    const newUser: User = {
-      id: editingUser ? editingUser.id : Date.now(),
-      username: formData.username,
-      password: formData.password,
-      email: formData.email,
-      role: formData.role,
-      status: formData.status as UserStatus,
-      createdAt: new Date().toISOString(),
-      otherPermissions: formData.otherPermissions
-    };
-
-    if (editingUser) {
-      dispatch(updateUser(newUser));
-    }
-    else {
-      dispatch(addUser(newUser));
-    }
-    console.log('Save user:', formData);
-    handleClose();
   };
 
   const handleToggleStatus = (userId: number) => {
@@ -224,42 +232,68 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  const generateRemainingPermissions = (user: User) => {
+    // Step 1: Fetch the user's role
+    const roleOfUser = user.role;
+
+    // Step 2: Find the role object for the user's role
+    const role = roles.find(r => r.name === roleOfUser);
+
+    // Step 3: Combine the role's permissions and user's otherPermissions
+    const assignedPermissions = [
+      ...(role?.permissions || []), // Role permissions
+      ...(user.otherPermissions || []) // Other individual permissions
+    ];
+
+    // Step 4: Calculate remaining permissions by filtering out assigned ones
+    const remainingPermissions = allPermissions.filter(
+      permission => !assignedPermissions.includes(permission.key)
+    );
+
+    // Step 5: Handle the user and return the remaining permissions
+    handleOpen(user);
+    setRemainingPermissions(remainingPermissions);
+    return remainingPermissions;
+  };
+
   const FilterSection = () => (
     <Card className="mb-6" variant="outlined">
       <CardContent>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <FormControl className="min-w-[200px]">
-            <InputLabel id="role-filter-label">Filter by Role</InputLabel>
-            <Select
-              labelId="role-filter-label"
-              id="role-filter"
-              value={roleFilter}
-              label="Filter by Role"
-              onChange={(e) => handleFilterChange('role', e.target.value)}
-            >
-              <MenuItem value="ALL">All Roles</MenuItem>
-              {roles.map(role => (
-                <MenuItem key={role.id} value={role.name}>
-                  {role.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+        <div className="flex flex-col sm:flex-row items-start gap-4">
+          <div className='w-[100%] flex gap-5'>
+            <FormControl className="min-w-[200px]">
+              <InputLabel id="role-filter-label">Filter by Role</InputLabel>
+              <Select
+                labelId="role-filter-label"
+                id="role-filter"
+                value={roleFilter}
+                label="Filter by Role"
+                onChange={(e) => handleFilterChange('role', e.target.value)}
+              >
+                <MenuItem value="ALL">All Roles</MenuItem>
+                {roles.map(role => (
+                  <MenuItem key={role.id} value={role.name}>
+                    {role.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-          <FormControl className="min-w-[200px]">
-            <InputLabel id="status-filter-label">Filter by Status</InputLabel>
-            <Select
-              labelId="status-filter-label"
-              id="status-filter"
-              value={statusFilter}
-              label="Filter by Status"
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-            >
-              <MenuItem value="ALL">All Status</MenuItem>
-              <MenuItem value="ACTIVE">Active</MenuItem>
-              <MenuItem value="INACTIVE">Inactive</MenuItem>
-            </Select>
-          </FormControl>
+            <FormControl className="min-w-[200px]">
+              <InputLabel id="status-filter-label">Filter by Status</InputLabel>
+              <Select
+                labelId="status-filter-label"
+                id="status-filter"
+                value={statusFilter}
+                label="Filter by Status"
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+              >
+                <MenuItem value="ALL">All Status</MenuItem>
+                <MenuItem value="ACTIVE">Active</MenuItem>
+                <MenuItem value="INACTIVE">Inactive</MenuItem>
+              </Select>
+            </FormControl>
+          </div>
 
           <div className="flex items-end">
             <Button
@@ -281,6 +315,10 @@ const UserManagement: React.FC = () => {
       </CardContent>
     </Card>
   );
+
+  useEffect(() => {
+    console.log('Users state updated:', users);
+  }, [users]);
 
   return (
     <div className="p-6">
@@ -306,9 +344,10 @@ const UserManagement: React.FC = () => {
         </div>
       </div>
 
-      <div id="filter-section" role="region" aria-label="Filter controls">
+      <section id="filter-section" aria-labelledby="filter-section-label">
+        <h2 id="filter-section-label" className="sr-only">Filter controls</h2>
         {showFilters && <FilterSection />}
-      </div>
+      </section>
 
       <div className="overflow-x-auto">
         <Table aria-label="User management table">
@@ -318,8 +357,13 @@ const UserManagement: React.FC = () => {
                 <Button
                   onClick={() => handleSort('username')}
                   endIcon={<SortIcon column="username" />}
-                  aria-label={`Sort by username ${sortConfig.key === 'username' ? `(${sortConfig.direction})` : ''}`}
+                  aria-label={
+                    sortConfig.key === 'username'
+                      ? `Sort by username (${sortConfig.direction})`
+                      : 'Sort by username'
+                  }
                 >
+
                   Username
                 </Button>
               </TableCell>
@@ -327,13 +371,18 @@ const UserManagement: React.FC = () => {
                 <Button
                   onClick={() => handleSort('email')}
                   endIcon={<SortIcon column="email" />}
-                  aria-label={`Sort by email ${sortConfig.key === 'email' ? `(${sortConfig.direction})` : ''}`}
+                  aria-label={
+                    sortConfig.key === 'email'
+                      ? `Sort by email (${sortConfig.direction})`
+                      : 'Sort by email'
+                  }
                 >
                   Email
                 </Button>
               </TableCell>
               <TableCell>Role</TableCell>
               <TableCell>Status</TableCell>
+              {/* <TableCell>Addtional Permissions</TableCell> */}
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -351,9 +400,22 @@ const UserManagement: React.FC = () => {
                     aria-label={`User status ${user.status}`}
                   />
                 </TableCell>
+
+                {/* <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {generateRemainingPermissions(user)?.map((permission) => (
+                      <Chip
+                        key={permission.key} // Use a unique key if permission is an object
+                        label={permission.label} // Adjust label based on data structure
+                        size="small"
+                        className="mr-1 mb-1"
+                      />
+                    ))}
+                  </div>
+                </TableCell> */}
                 <TableCell>
                   <IconButton
-                    onClick={() => handleOpen(user)}
+                    onClick={() => generateRemainingPermissions(user)}
                     size="small"
                     aria-label={`Edit ${user.username}`}
                     disabled={['sadha', 'sarves', 'sanjay'].includes(user.username)}
@@ -432,8 +494,11 @@ const UserManagement: React.FC = () => {
           </TextField>
           <RadioGroup
             row
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            value={formData.status}
+            onChange={(e) => {
+              // setStatus(e.target.value);
+              setFormData({ ...formData, status: e.target.value });
+            }}
             name="status-radio-group"
             aria-label="user status"
           >
