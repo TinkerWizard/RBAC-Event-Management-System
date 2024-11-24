@@ -91,6 +91,45 @@ Use the following credentials to test the application:
    - `ADMIN`: Manage users, roles, and permissions.
    - `ORGANIZER`: Create, view, update, delete, and export events.
    - `VIEWER`: View and register for events.
+3. Log in as an ADMIN:
+    - Use sadha's credentials to login.
+    - You are presented with cards and metric bars showing some metadata's of users and roles. Below that, you can see Roles table and Users tables. Also, you can see the events list since `sadha` has been given the permission `register_events`.
+    - You will see Roles tables with predefined roles `ADMIN`, `ORGANIZER` and `VIEWER`.
+    - By default, you(even the admin) cannot delete/edit these roles. Since, the basic CRUD operations require these three roles.
+    - Add a role. Then, you can perform other operations such as read, update and delete roles. 
+    - You cannot add a duplicate role. 
+    - You can give multiple permissions for the role. Each permissions give you rights to access certain screens and certain actions.
+    - You can delete roles.
+    - You will see Users tables with predefined users `sadha`, `sarves`, `sanjay`, `saran` and `nalan`.
+    - You can filter users based on roles or status.
+    - You can sort based on username or email.
+    - By default, you(even the admin) cannot delete the users `sadha`, `sarves` and `sanjay`. Since, the basic CRUD operations require users with the respective rights.
+    - Add a user. Then, you can perform other operations such as read, update and delete users or tinker around with `saran` or `nalan`.
+    - Try logging in as `saran`. Since, `saran` is `INACTIVE`, you won't be prompted to the dashboard. You have to log in as an admin to update `saran` as `ACTIVE`.
+    - You cannot add a duplicate username or email.
+    - You can give additional permissions for the user. Each permissions give you rights to access certain screens and certain actions. 
+    - By giving `register_events` permission to an ADMIN, the ADMIN can view the event list screen. Just like the user `sadha`.
+    - You can delete users.
+4. Log in as an ORGANIZER:
+    - Use `sarves` credentials to log in as an ORGANIZER.
+    - You are presented with cards showing some metadata's of events. Below that, you can see Events in Grid. Also, you can see the events list since `sarves` has been given the permission `register_events`.
+    - The events section below has all the neccessary data of all events.
+    - You can do CRUD operations on the events listed.
+    - Since you're logged in as `sarves`, you're presented with events that are added using `sarves`.
+    - If you login as `nalan`, you wont see any events. You're free to add events to check how other ORGANIZER's events are not listed. Thus, you cannot read, update or delete other ORGANIZER's events.
+    - You can export events details and get them as an excel sheet.
+    - You can delete events.
+5. Log in as a VIEWER:
+    - Use `sanjay` credentials to log in as an VIEWER.
+    - You are presented with events list.
+    - You can filter/search the event list by typing the location.
+    - You can filter the event list based on the STATUS of the events.(Upcoming,  Ongoing, Completed, Cancelled).
+    - You can sort events by Title or Date.
+    - Registering an event was not implemented and marked for future implementations.
+
+---
+
+## Creating a better experince
 
 ---
 
