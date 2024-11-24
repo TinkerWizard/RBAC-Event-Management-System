@@ -57,7 +57,7 @@ The **Event Management System (EMS)** is a **Role-Based Access Control (RBAC)** 
 
 ### Register/Unregister Events
 - **View and Register Events**:  
-  `VIEWER` or users with the `register_events` and `unregister_events` permissions can view the list of events and register/unregister for events.
+  `VIEWER` or users with the `register_events` permissions can view the list of events and register/unregister for events.
 
 ---
 

@@ -137,7 +137,7 @@ const Dashboard: React.FC = () => {
         </div>
       }
       {(user?.otherPermissions?.some(permission =>
-        ["manage_events", "export_events", "view_events"].includes(permission)
+        ["manage_events", "export_events"].includes(permission)
       ) || user?.role === 'ORGANIZER')
         &&
         <div className='flex gap-10'>
@@ -166,13 +166,13 @@ const Dashboard: React.FC = () => {
       {(user?.otherPermissions?.includes('manage_users') || user?.role === 'ADMIN') && <UserManagement />}
 
       {(user?.otherPermissions?.some(permission =>
-        ["manage_events", "export_events", "view_events"].includes(permission)
+        ["manage_events", "export_events"].includes(permission)
       ) || user?.role === 'ORGANIZER') && (
           <EventManagement />
         )}
 
         {
-          (user?.otherPermissions?.includes('register_events') || user?.otherPermissions?.includes('unregister_events') || user?.role === 'VIEWER') &&
+          (user?.otherPermissions?.includes('register_events') || user?.role === 'VIEWER') &&
           <EventList />
         }
     </div>

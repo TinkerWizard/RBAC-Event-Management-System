@@ -15,7 +15,7 @@ const initialState: UserState = {
       role: "ADMIN",
       status: "ACTIVE",
       createdAt: "2024-01-01",
-      otherPermissions: ["register_events", "unregister_events"],
+      otherPermissions: ["register_events"],
     },
     {
       id: 2,
@@ -25,7 +25,7 @@ const initialState: UserState = {
       role: "ORGANIZER",
       status: "ACTIVE",
       createdAt: "2024-01-01",
-      otherPermissions: ["register_events", "unregister_events"],
+      otherPermissions: ["register_events"],
     },
     {
       id: 3,

@@ -31,8 +31,6 @@ const availablePermissions = [
   { key: 'manage_events', label: 'Manage Events' },
   { key: 'export_events', label: 'Export Events' },
   { key: 'register_events', label: 'Register Events' },
-  { key: 'unregister_events', label: 'Unregister Events' },
-
 ];
 
 interface RoleFormData {

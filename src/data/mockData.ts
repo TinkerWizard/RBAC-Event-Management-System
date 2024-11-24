@@ -14,13 +14,13 @@ export const roles: Role[] = [
   {
     id: 2,
     name: "ORGANIZER",
-    permissions: ["manage_events", "export_events", "view_events"],
+    permissions: ["manage_events", "export_events"],
     createdAt: "2024-01-01",
   },
   {
     id: 3,
     name: "VIEWER",
-    permissions: ["register_events", "unregister_events"],
+    permissions: ["register_events"],
     createdAt: "2024-01-01",
   },
 ];
@@ -34,7 +34,7 @@ export const users: User[] = [
     role: "ADMIN",
     status: "ACTIVE",
     createdAt: "2024-01-01",
-    otherPermissions: ["register_events", "unregister_events"],
+    otherPermissions: ["register_events"],
   },
   {
     id: 2,
