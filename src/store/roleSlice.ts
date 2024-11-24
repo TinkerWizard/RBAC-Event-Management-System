@@ -17,13 +17,13 @@ const initialState: RoleState = {
     {
       id: 2,
       name: "ORGANIZER",
-      permissions: ["manage_events", "export_events", "view_events"],
+      permissions: ["manage_events", "export_events"],
       createdAt: "2024-01-01",
     },
     {
       id: 3,
       name: "VIEWER",
-      permissions: ["register_events", "unregister_events"],
+      permissions: ["register_events"],
       createdAt: "2024-01-01",
     },
   ],
