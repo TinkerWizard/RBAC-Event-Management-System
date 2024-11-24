@@ -25,7 +25,7 @@ const initialState: UserState = {
       role: "ORGANIZER",
       status: "ACTIVE",
       createdAt: "2024-01-01",
-      otherPermissions: [],
+      otherPermissions: ["register_events", "unregister_events"],
     },
     {
       id: 3,
@@ -61,8 +61,11 @@ const userSlice = createSlice({
             const index = state.users.findIndex(
                 (user) => user.id === action.payload.id
             );
+            console.log('Updating user:', action.payload);
+            console.log('Found at index:', index);
             if (index !== -1) {
                 state.users[index] = action.payload;
+                console.log('Updated state:', state.users);
             }
         },
         deleteUser(state, action: PayloadAction<User>) {
