@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import {
   Table,
@@ -15,28 +14,28 @@ import {
   InputLabel,
 } from '@mui/material';
 import { check } from '../utils/rbac-rules';
-import { events } from '../data/mockData';
 import { RootState } from '../store/store';
 import { Event, EventStatus } from '../types';
 import { useState } from 'react';
 
 const EventList: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
+  const { events } = useSelector((state: RootState) => state.events);
 
   const [registeredEvents, setRegisteredEvents] = useState<Set<string>>(new Set());
   const [locationFilter, setLocationFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<EventStatus | ''>('');
   const [sortBy, setSortBy] = useState<'title' | 'date' | ''>('');
 
-  const { data: eventData } = useQuery({
-    queryKey: ['events'],
-    queryFn: () => {
-      if (user?.role === 'ORGANIZER') {
-        return events.filter(event => event.organizerId === user.id);
-      }
-      return events;
-    }
-  });
+  // const { data: eventData } = useQuery({
+  //   queryKey: ['events'],
+  //   queryFn: () => {
+  //     if (user?.role === 'ORGANIZER') {
+  //       return events.filter(event => event.organizerId === user.id);
+  //     }
+  //     return events;
+  //   }
+  // });
 
   const canRegister = (event: Event) =>
     user ? check(user.role, 'read', 'events', user.id, event) : false;
@@ -69,7 +68,7 @@ const EventList: React.FC = () => {
   };
 
   // Apply filtering
-  const filteredEvents = eventData
+  const filteredEvents = events
     ?.filter(event =>
       (locationFilter ? event.location.toLowerCase().includes(locationFilter.toLowerCase()) : true) &&
       (statusFilter ? event.status === statusFilter : true)
@@ -84,7 +83,7 @@ const EventList: React.FC = () => {
   return (
     <div className="p-6">
       {/* Filters and Sorting */}
-      <div className="filters mb-4">
+      <div className="filters mb-4 flex gap-5">
         <FormControl className="mr-4" size="medium">
           <TextField
             label="Filter by Location"
@@ -92,9 +91,10 @@ const EventList: React.FC = () => {
             onChange={(e) => setLocationFilter(e.target.value)}
           />
         </FormControl>
-        <FormControl className="mr-4" size="medium">
+        <FormControl className="mr-4 w-[10%]" size="medium">
           <InputLabel>Status</InputLabel>
           <Select
+            label="Status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as EventStatus | '')}
           >
@@ -105,9 +105,10 @@ const EventList: React.FC = () => {
             <MenuItem value="CANCELLED">Cancelled</MenuItem>
           </Select>
         </FormControl>
-        <FormControl className="mr-4" size="small">
+        <FormControl className="mr-4 w-[10%]" size="medium">
           <InputLabel>Sort By</InputLabel>
           <Select
+            label="Sort By"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as 'title' | 'date' | '')}
           >
@@ -149,6 +150,7 @@ const EventList: React.FC = () => {
                     color={registeredEvents.has(String(event.id)) ? "warning" : "primary"}
                     size="small"
                     onClick={() => handleRegisterToggle(String(event.id))}
+                    disabled={event.status === 'CANCELLED' || event.status === 'COMPLETED'}
                   >
                     {registeredEvents.has(String(event.id)) ? "Unregister" : "Register"}
                   </Button>
