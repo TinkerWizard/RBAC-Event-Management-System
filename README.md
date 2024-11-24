@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **Event Management System (EMS)** is a **Role-Based Access Control (RBAC)** application designed for secure and efficient event management. With predefined roles such as `ADMIN`, `ORGANIZER`, and `VIEWER`, and granular permissions like `Manage Users`, `Manage Roles`, `Manage Events`, and `Register/Unregister Events`, the system ensures that users have appropriate access levels based on their roles and responsibilities.
+The **Event Management System (EMS)** is a **Role-Based Access Control (RBAC)** application designed for secure and efficient event management. With predefined roles such as `ADMIN`, `ORGANIZER`, and `VIEWER`, and granular permissions like `Manage Users`, `Manage Roles`, `Manage Events`, and `Register Events`, the system ensures that users have appropriate access levels based on their roles and responsibilities.
 
 ---
 
@@ -38,8 +38,8 @@ The **Event Management System (EMS)** is a **Role-Based Access Control (RBAC)** 
 - **Read/View Events**:  
   - `ORGANIZER` (the event creator) and users with the `manage_events` or `register_events` permission can view events.
   - **Special Case**:  
-    - **Sarves** is a predefined `ORGANIZER` who has added multiple events.  
-    - **Nalan** is another predefined `ORGANIZER` who cannot view events created by `Sarves` unless they have the `register_events` permission.
+    - **Sarves** is a predefined `ORGANIZER` who has added multiple events. Log in as sarves to view the events. 
+    - I want you to create an user with `ORGANIZER` rights and log in as the user. There won't be any event listed, since the new user haven't create any event.
 - **Update Events**:  
   Only `ORGANIZER` (the creator) or users with the `manage_events` permission can update events.
 - **Delete Events**:  
@@ -55,9 +55,9 @@ The **Event Management System (EMS)** is a **Role-Based Access Control (RBAC)** 
 
 ---
 
-### Register/Unregister Events
+### Register Events
 - **View and Register Events**:  
-  `VIEWER` or users with the `register_events` permissions can view the list of events and register/unregister for events.
+  `VIEWER` or users with the `register_events` permissions can view the list of events and register for events.
 
 ---
 
