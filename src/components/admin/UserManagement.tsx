@@ -341,8 +341,8 @@ const UserManagement: React.FC = () => {
   );
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between mb-6">
+    <div className="p-6" style={{ width: '90vw' }}>
+      <div className="flex justify-between mb-6 xs:flex-col gap-5">
         <h2 className="text-2xl font-bold text-gray-950">User Management</h2>
         <div className="flex gap-2">
           <Button
@@ -369,7 +369,7 @@ const UserManagement: React.FC = () => {
         {showFilters && <FilterSection />}
       </section>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-w-full" >
         <Table aria-label="User management table">
           <TableHead>
             <TableRow>

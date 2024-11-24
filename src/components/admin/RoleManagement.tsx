@@ -57,8 +57,8 @@ const RoleManagement: React.FC = () => {
     }
 
     const isDuplicate = roles.some(
-      role => 
-        role.name.toLowerCase() === name.toLowerCase() && 
+      role =>
+        role.name.toLowerCase() === name.toLowerCase() &&
         (!editingRole || role.id !== editingRole.id)
     );
 
@@ -115,7 +115,7 @@ const RoleManagement: React.FC = () => {
   };
 
   const dispatch = useDispatch();
-  
+
   const handleSubmit = () => {
     if (!validateName(formData.name)) {
       return;
@@ -144,7 +144,7 @@ const RoleManagement: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-white">
+    <div>
       <div className="flex justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-950">Role Management</h2>
         <Button
@@ -155,100 +155,103 @@ const RoleManagement: React.FC = () => {
           Add Role
         </Button>
       </div>
+      <div className="p-6 bg-white overflow-x-auto max-w-full" style={{ width: '90vw' }}>
 
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Permissions</TableCell>
-            <TableCell>Created At</TableCell>
-            <TableCell>Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {roles?.map((role) => (
-            <TableRow key={role.id}>
-              <TableCell>{role.name}</TableCell>
-              <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {role.permissions.map((permission) => (
-                    <Chip
-                      key={permission}
-                      label={permission}
-                      size="small"
-                      className="mr-1 mb-1"
-                    />
-                  ))}
-                </div>
-              </TableCell>
-              <TableCell>{role.createdAt}</TableCell>
-              <TableCell>
-                <IconButton
-                  onClick={() => handleOpen(role)}
-                  size="small"
-                  disabled={['ADMIN', 'ORGANIZER', 'VIEWER'].includes(role.name)}
-                >
-                  <Edit className="w-4 h-4" />
-                </IconButton>
-                <IconButton
-                  onClick={() => handleDelete(role.id)}
-                  size="small"
-                  color="error"
-                  disabled={['ADMIN', 'ORGANIZER', 'VIEWER'].includes(role.name)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </IconButton>
-              </TableCell>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Permissions</TableCell>
+              <TableCell>Created At</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {roles?.map((role) => (
+              <TableRow key={role.id}>
+                <TableCell>{role.name}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {role.permissions.map((permission) => (
+                      <Chip
+                        key={permission}
+                        label={permission}
+                        size="small"
+                        className="mr-1 mb-1"
+                      />
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell>{role.createdAt}</TableCell>
+                <TableCell>
+                  <IconButton
+                    onClick={() => handleOpen(role)}
+                    size="small"
+                    disabled={['ADMIN', 'ORGANIZER', 'VIEWER'].includes(role.name)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => handleDelete(role.id)}
+                    size="small"
+                    color="error"
+                    disabled={['ADMIN', 'ORGANIZER', 'VIEWER'].includes(role.name)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {editingRole ? 'Edit Role' : 'Add New Role'}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Name"
-            value={formData.name}
-            onChange={handleNameChange}
-            fullWidth
-            margin="normal"
-            required
-            error={!!formError}
-            helperText={formError}
-          />
-          <div className="mt-4">
-            <h3 className="text-lg font-medium mb-2">Permissions</h3>
-            <FormGroup>
-              {availablePermissions.map((permission) => (
-                <FormControlLabel
-                  key={permission.key}
-                  control={
-                    <Checkbox
-                      checked={formData.permissions.includes(permission.key)}
-                      onChange={() => handlePermissionChange(permission.key)}
-                    />
-                  }
-                  label={permission.label}
-                />
-              ))}
-            </FormGroup>
-          </div>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained"
-            disabled={!!formError}
-          >
-            {editingRole ? 'Save' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+          <DialogTitle>
+            {editingRole ? 'Edit Role' : 'Add New Role'}
+          </DialogTitle>
+          <DialogContent>
+            <TextField
+              label="Name"
+              value={formData.name}
+              onChange={handleNameChange}
+              fullWidth
+              margin="normal"
+              required
+              error={!!formError}
+              helperText={formError}
+            />
+            <div className="mt-4">
+              <h3 className="text-lg font-medium mb-2">Permissions</h3>
+              <FormGroup>
+                {availablePermissions.map((permission) => (
+                  <FormControlLabel
+                    key={permission.key}
+                    control={
+                      <Checkbox
+                        checked={formData.permissions.includes(permission.key)}
+                        onChange={() => handlePermissionChange(permission.key)}
+                      />
+                    }
+                    label={permission.label}
+                  />
+                ))}
+              </FormGroup>
+            </div>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              disabled={!!formError}
+            >
+              {editingRole ? 'Save' : 'Create'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
     </div>
+
   );
 };
 

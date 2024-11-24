@@ -27,16 +27,6 @@ const EventList: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<EventStatus | ''>('');
   const [sortBy, setSortBy] = useState<'title' | 'date' | ''>('');
 
-  // const { data: eventData } = useQuery({
-  //   queryKey: ['events'],
-  //   queryFn: () => {
-  //     if (user?.role === 'ORGANIZER') {
-  //       return events.filter(event => event.organizerId === user.id);
-  //     }
-  //     return events;
-  //   }
-  // });
-
   const canRegister = (event: Event) =>
     user ? check(user.role, 'read', 'events', user.id, event) : false;
 
@@ -81,9 +71,10 @@ const EventList: React.FC = () => {
     });
 
   return (
-    <div className="p-6">
+    <div>
       {/* Filters and Sorting */}
-      <div className="filters mb-4 flex gap-5">
+      <div className="filters mb-4 flex xs:flex-col gap-5">
+      <h2 className="text-2xl font-bold text-gray-950">Event List</h2>
         <FormControl className="mr-4" size="medium">
           <TextField
             label="Filter by Location"
@@ -91,7 +82,7 @@ const EventList: React.FC = () => {
             onChange={(e) => setLocationFilter(e.target.value)}
           />
         </FormControl>
-        <FormControl className="mr-4 w-[10%]" size="medium">
+        <FormControl className="mr-4 sm:w-[20%]" size="medium">
           <InputLabel>Status</InputLabel>
           <Select
             label="Status"
@@ -105,7 +96,7 @@ const EventList: React.FC = () => {
             <MenuItem value="CANCELLED">Cancelled</MenuItem>
           </Select>
         </FormControl>
-        <FormControl className="mr-4 w-[10%]" size="medium">
+        <FormControl className="mr-4 sm:w-[20%]" size="medium">
           <InputLabel>Sort By</InputLabel>
           <Select
             label="Sort By"
@@ -118,48 +109,49 @@ const EventList: React.FC = () => {
           </Select>
         </FormControl>
       </div>
-
-      {/* Event Table */}
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Title</TableCell>
-            <TableCell>Date</TableCell>
-            <TableCell>Location</TableCell>
-            <TableCell>Seats Available</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {filteredEvents?.map((event) => (
-            <TableRow key={event.id}>
-              <TableCell>{event.title}</TableCell>
-              <TableCell>{event.date}</TableCell>
-              <TableCell>{event.location}</TableCell>
-              <TableCell>{event.registrations}/{event.capacity}</TableCell>
-              <TableCell><Chip
-                label={event.status}
-                color={getStatusColor(event.status)}
-                size="small"
-              /></TableCell>
-              <TableCell>
-                {canRegister(event) && (
-                  <Button
-                    variant="contained"
-                    color={registeredEvents.has(String(event.id)) ? "warning" : "primary"}
-                    size="small"
-                    onClick={() => handleRegisterToggle(String(event.id))}
-                    disabled={event.status === 'CANCELLED' || event.status === 'COMPLETED'}
-                  >
-                    {registeredEvents.has(String(event.id)) ? "Unregister" : "Register"}
-                  </Button>
-                )}
-              </TableCell>
+      <div className="p-6 overflow-x-auto max-w-full" style={{ width: '90vw' }}>
+        {/* Event Table */}
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Title</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell>Location</TableCell>
+              <TableCell>Seats Available</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {filteredEvents?.map((event) => (
+              <TableRow key={event.id}>
+                <TableCell>{event.title}</TableCell>
+                <TableCell>{event.date}</TableCell>
+                <TableCell>{event.location}</TableCell>
+                <TableCell>{event.registrations}/{event.capacity}</TableCell>
+                <TableCell><Chip
+                  label={event.status}
+                  color={getStatusColor(event.status)}
+                  size="small"
+                /></TableCell>
+                <TableCell>
+                  {canRegister(event) && (
+                    <Button
+                      variant="contained"
+                      color={registeredEvents.has(String(event.id)) ? "warning" : "primary"}
+                      size="small"
+                      onClick={() => handleRegisterToggle(String(event.id))}
+                      disabled={event.status === 'CANCELLED' || event.status === 'COMPLETED'}
+                    >
+                      {registeredEvents.has(String(event.id)) ? "Unregister" : "Register"}
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };

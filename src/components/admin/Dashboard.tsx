@@ -56,9 +56,6 @@ const Dashboard: React.FC = () => {
   ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()
   : null;
   const pageHeading = `${currentRole}'s Dashboard`; 
-  // console.log(user);
-  console.log("Users: ",users);
-  console.log("Roles: ",roles);
   const roleCounts = users.reduce((acc, user) => {
     acc[user.role] = (acc[user.role] || 0) + 1; // Increment count for the role
     return acc;
@@ -72,7 +69,7 @@ const Dashboard: React.FC = () => {
 
 
   return (
-    <div className="p-6 flex flex-col justify-center gap-5" style={{ width: '90vw' }}>
+    <div className="p-6 flex flex-col justify-center gap-5">
       <TopBar heading={pageHeading} />
       {(user?.otherPermissions?.some(permission =>
         ["manage_users", "manage_roles"].includes(permission)

@@ -14,8 +14,6 @@ const AppRoutes = () => {
   // Now useSelector is used inside a component that's wrapped by Provider
   const roles = useSelector((state: RootState) => state.roles.roles);
   const roleNames = roles.map(role => role.name);
-  console.log('Current roles:', roles);
-  console.log('Role names:', roleNames);
   return (
     <Routes>
       <Route path="/" element={<LoginForm />} />

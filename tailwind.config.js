@@ -4,6 +4,13 @@ module.exports = {
   ],
   theme: {
     extend: {},
+    screens: {
+      xs: { max: '639px' },
+      sm: '640px', // Small devices
+      md: '768px', // Medium devices
+      lg: '1024px', // Large devices
+      xl: '1280px', // Extra-large devices
+    },
   },
   plugins: [],
 };
