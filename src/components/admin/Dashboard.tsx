@@ -52,8 +52,9 @@ const Dashboard: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { roles } = useSelector((state: RootState) => state.roles);
   const { users } = useSelector((state: RootState) => state.users);
-  console.log(user);
-  console.log(users);
+  // console.log(user);
+  console.log("Users: ",users);
+  console.log("Roles: ",roles);
   const roleCounts = users.reduce((acc, user) => {
     acc[user.role] = (acc[user.role] || 0) + 1; // Increment count for the role
     return acc;
@@ -170,11 +171,10 @@ const Dashboard: React.FC = () => {
           <EventManagement />
         )}
 
-      {(user?.otherPermissions?.some(permission =>
-        ["register_events", "unregister_events"].includes(permission)
-      ) || user?.role === 'VIEWER') && (
+        {
+          (user?.otherPermissions?.includes('register_events') || user?.otherPermissions?.includes('unregister_events') || user?.role === 'VIEWER') &&
           <EventList />
-        )}
+        }
     </div>
   );
 };
