@@ -6,6 +6,7 @@ import PrivateRoute from './components/PrivateRoute';
 import LoginForm from './components/LoginForm';
 import Dashboard from './components/admin/Dashboard';
 import { PersistGate } from 'redux-persist/integration/react';
+import { Analytics } from '@vercel/analytics/react';
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ function App() {
       <PersistGate loading={<div>Loading...</div>} persistor={persistor}>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
+            <Analytics />
             <AppRoutes />
           </BrowserRouter>
         </QueryClientProvider>
